@@ -1,2 +1,2 @@
-# De-authenticationProtocols
+# De-authentication Detection Protocols
 Lightweight de-authentication detection protocols are compared by simulating attacks using Python and analyzing relevant captured metrics.
