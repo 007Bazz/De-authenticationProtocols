@@ -29,6 +29,7 @@ def normal_client_deauth():
     client.deauth()
     time.sleep(0.5)
     assert(not ap.client_connected("de:ad:be:ef:00:01"))
+    ap.stop()
 
 def normal_ap_deauth():
     ether = sim.Ether()
@@ -42,6 +43,7 @@ def normal_ap_deauth():
     ap.deauth_client("de:ad:be:ef:00:01")
     time.sleep(0.5)
     assert(not client.connected)
+    ap.stop()
 
 def normal_ap_deauth_all():
     ether = sim.Ether()
@@ -55,6 +57,7 @@ def normal_ap_deauth_all():
     ap.deauth_all()
     time.sleep(0.5)
     assert(not client.connected)
+    ap.stop()
 
 def normal_attacker_client_deauth():
     ether = sim.Ether()
@@ -68,6 +71,7 @@ def normal_attacker_client_deauth():
     ether.send(sim.Frame.deauth("de:ad:be:ef:00:01", "bo:ba:ca:fe:00:01", {}))
     time.sleep(0.5)
     assert(not ap.client_connected("de:ad:be:ef:00:01"))
+    ap.stop()
 
 def normal_attacker_ap_deauth():
     ether = sim.Ether()
@@ -81,6 +85,7 @@ def normal_attacker_ap_deauth():
     ether.send(sim.Frame.deauth("bo:ba:ca:fe:00:01", "de:ad:be:ef:00:01", {}))
     time.sleep(0.5)
     assert(not client.connected)
+    ap.stop()
 
 def normal_attacker_ap_deauth_all():
     ether = sim.Ether()
@@ -94,6 +99,7 @@ def normal_attacker_ap_deauth_all():
     ether.send(sim.Frame.deauth("bo:ba:ca:fe:00:01", sim.ADDRESS_BROADCAST, {}))
     time.sleep(0.5)
     assert(not client.connected)
+    ap.stop()
 
 
 # Letter envelope
@@ -109,6 +115,7 @@ def envelope_client_deauth():
     client.deauth()
     time.sleep(0.5)
     assert(not ap.client_connected("de:ad:be:ef:00:01"))
+    ap.stop()
 
 def normal_ap_deauth():
     ether = sim.Ether()
@@ -122,6 +129,7 @@ def normal_ap_deauth():
     ap.deauth_client("de:ad:be:ef:00:01")
     time.sleep(0.5)
     assert(not client.connected)
+    ap.stop()
 
 def envelope_ap_deauth_all():
     ether = sim.Ether()
@@ -135,6 +143,7 @@ def envelope_ap_deauth_all():
     ap.deauth_all()
     time.sleep(0.5)
     assert(not client.connected)
+    ap.stop()
 
 def envelope_attacker_client_deauth():
     ether = sim.Ether()
@@ -148,6 +157,7 @@ def envelope_attacker_client_deauth():
     ether.send(sim.Frame.deauth("de:ad:be:ef:00:01", "bo:ba:ca:fe:00:01", {}))
     time.sleep(0.5)
     assert(ap.client_connected("de:ad:be:ef:00:01"))
+    ap.stop()
 
 def envelope_attacker_ap_deauth():
     ether = sim.Ether()
@@ -161,6 +171,7 @@ def envelope_attacker_ap_deauth():
     ether.send(sim.Frame.deauth("bo:ba:ca:fe:00:01", "de:ad:be:ef:00:01", {}))
     time.sleep(0.5)
     assert(client.connected)
+    ap.stop()
 
 def envelope_attacker_ap_deauth_all():
     ether = sim.Ether()
@@ -174,3 +185,4 @@ def envelope_attacker_ap_deauth_all():
     ether.send(sim.Frame.deauth("bo:ba:ca:fe:00:01", sim.ADDRESS_BROADCAST, {}))
     time.sleep(0.5)
     assert(client.connected)
+    ap.stop()
