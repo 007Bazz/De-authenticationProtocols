@@ -12,6 +12,7 @@ class Ether:
     
     def send(self, message):
         with self.write:
+            time.sleep(0.1)
             self.shared["message"] = message
             self.read.set()
             self.read.clear()
