@@ -1,6 +1,7 @@
 import simulation as sim
 from protocols.normal import Normal
 from protocols.letter_envelope import LetterEnvelope
+from protocols.uuid_sha512 import UUIDSHA512
 import time
 
 def run_all():
@@ -32,8 +33,8 @@ def run_all():
     envelope_client_deauth()
     time.sleep(1)
     print("\n\n")
-    print("    normal_ap_deauth")
-    normal_ap_deauth()
+    print("    envelope_ap_deauth")
+    envelope_ap_deauth()
     time.sleep(1)
     print("\n\n")
     print("    envelope_ap_deauth_all")
@@ -50,6 +51,30 @@ def run_all():
     print("\n\n")
     print("    envelope_attacker_ap_deauth_all")
     envelope_attacker_ap_deauth_all()
+    time.sleep(1)
+    print("\n\n")
+    print("    uuid_client_deauth")
+    uuid_client_deauth()
+    time.sleep(1)
+    print("\n\n")
+    print("    normal_ap_deauth")
+    normal_ap_deauth()
+    time.sleep(1)
+    print("\n\n")
+    print("    uuid_ap_deauth_all")
+    uuid_ap_deauth_all()
+    time.sleep(1)
+    print("\n\n")
+    print("    uuid_attacker_client_deauth")
+    uuid_attacker_client_deauth()
+    time.sleep(1)
+    print("\n\n")
+    print("    uuid_attacker_ap_deauth")
+    uuid_attacker_ap_deauth()
+    time.sleep(1)
+    print("\n\n")
+    print("    uuid_attacker_ap_deauth_all")
+    uuid_attacker_ap_deauth_all()
     time.sleep(1)
     print("\n\n")
 
@@ -153,7 +178,7 @@ def envelope_client_deauth():
     assert(not ap.client_connected("de:ad:be:ef:00:01"))
     ap.stop()
 
-def normal_ap_deauth():
+def envelope_ap_deauth():
     ether = sim.Ether()
     protocol = LetterEnvelope()
     ap = sim.AccessPoint(ether, "bo:ba:ca:fe:00:01", protocol, "AccessPoint")
@@ -212,6 +237,91 @@ def envelope_attacker_ap_deauth():
 def envelope_attacker_ap_deauth_all():
     ether = sim.Ether()
     protocol = LetterEnvelope()
+    ap = sim.AccessPoint(ether, "bo:ba:ca:fe:00:01", protocol, "AccessPoint")
+    time.sleep(0.5)
+    client = sim.Client(ether, "de:ad:be:ef:00:01", protocol)
+    client.connect()
+    time.sleep(0.5)
+    assert(client.connected)
+    ether.send(sim.Frame.deauth("bo:ba:ca:fe:00:01", sim.ADDRESS_BROADCAST, {}))
+    time.sleep(0.5)
+    assert(client.connected)
+    ap.stop()
+
+# UUID
+def uuid_client_deauth():
+    ether = sim.Ether()
+    protocol = LetterEnvelope()
+    ap = sim.AccessPoint(ether, "bo:ba:ca:fe:00:01", protocol, "AccessPoint")
+    time.sleep(0.5)
+    client = sim.Client(ether, "de:ad:be:ef:00:01", protocol)
+    client.connect()
+    time.sleep(0.5)
+    assert(client.connected)
+    client.deauth()
+    time.sleep(0.5)
+    assert(not ap.client_connected("de:ad:be:ef:00:01"))
+    ap.stop()
+
+def uuid_ap_deauth():
+    ether = sim.Ether()
+    protocol = UUIDSHA512()
+    ap = sim.AccessPoint(ether, "bo:ba:ca:fe:00:01", protocol, "AccessPoint")
+    time.sleep(0.5)
+    client = sim.Client(ether, "de:ad:be:ef:00:01", protocol)
+    client.connect()
+    time.sleep(0.5)
+    assert(client.connected)
+    ap.deauth_client("de:ad:be:ef:00:01")
+    time.sleep(0.5)
+    assert(not client.connected)
+    ap.stop()
+
+def uuid_ap_deauth_all():
+    ether = sim.Ether()
+    protocol = UUIDSHA512()
+    ap = sim.AccessPoint(ether, "bo:ba:ca:fe:00:01", protocol, "AccessPoint")
+    time.sleep(0.5)
+    client = sim.Client(ether, "de:ad:be:ef:00:01", protocol)
+    client.connect()
+    time.sleep(0.5)
+    assert(client.connected)
+    ap.deauth_all()
+    time.sleep(0.5)
+    assert(not client.connected)
+    ap.stop()
+
+def uuid_attacker_client_deauth():
+    ether = sim.Ether()
+    protocol = UUIDSHA512()
+    ap = sim.AccessPoint(ether, "bo:ba:ca:fe:00:01", protocol, "AccessPoint")
+    time.sleep(0.5)
+    client = sim.Client(ether, "de:ad:be:ef:00:01", protocol)
+    client.connect()
+    time.sleep(0.5)
+    assert(client.connected)
+    ether.send(sim.Frame.deauth("de:ad:be:ef:00:01", "bo:ba:ca:fe:00:01", {}))
+    time.sleep(0.5)
+    assert(ap.client_connected("de:ad:be:ef:00:01"))
+    ap.stop()
+
+def uuid_attacker_ap_deauth():
+    ether = sim.Ether()
+    protocol = UUIDSHA512()
+    ap = sim.AccessPoint(ether, "bo:ba:ca:fe:00:01", protocol, "AccessPoint")
+    time.sleep(0.5)
+    client = sim.Client(ether, "de:ad:be:ef:00:01", protocol)
+    client.connect()
+    time.sleep(0.5)
+    assert(client.connected)
+    ether.send(sim.Frame.deauth("bo:ba:ca:fe:00:01", "de:ad:be:ef:00:01", {}))
+    time.sleep(0.5)
+    assert(client.connected)
+    ap.stop()
+
+def uuid_attacker_ap_deauth_all():
+    ether = sim.Ether()
+    protocol = UUIDSHA512()
     ap = sim.AccessPoint(ether, "bo:ba:ca:fe:00:01", protocol, "AccessPoint")
     time.sleep(0.5)
     client = sim.Client(ether, "de:ad:be:ef:00:01", protocol)
