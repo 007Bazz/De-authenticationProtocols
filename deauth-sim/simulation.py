@@ -4,34 +4,24 @@ import time
 
 class Ether:
     def __init__(self):
-        #manager = mp.Manager()
         self.shared = {}
         self.write = threading.Lock()
         self.read = threading.Event()
         self.read_end = threading.Condition()
-        self.shared["readers"] = 0
         self.dropped_frames = 0
     
     def send(self, message):
         with self.write:
-            #time.sleep(1)
             self.shared["message"] = message
             self.read.set()
-            # with self.read_end:
-                # self.read_end.wait_for(lambda: self.shared["readers"] == 0)
             self.read.clear()
     
     def recv(self, timeout=None):
-        #with self.write:
-        #    self.shared["readers"] += 1
         result = None
         if self.read.wait(timeout):
             result = self.shared["message"]
         else:
             self.dropped_frames += 1
-        self.shared["readers"] -= 1
-        #with self.read_end:
-        #    self.read_end.notify()
         return result
 
 SUBTYPE_ASSOC_REQ = 0b0000
@@ -97,7 +87,6 @@ class AccessPoint:
         self.clients = {}
         self.routing_table = {}
         self.protocol_data = protocol.ap_start()
-        #self.p = mp.Process(target=self.listen)
         self.running = True
         self.p = threading.Thread(target=self.listen)
         self.p.start()
@@ -107,7 +96,6 @@ class AccessPoint:
             frame: Frame = self.ether.recv(10)
             if frame != None and frame.dest == self.mac or frame.dest == ADDRESS_BROADCAST:
                 #Addressed to this AP
-                print("AP", self.mac, "recv", frame)
                 if frame.type == 0:
                     #Managment frame
                     if frame.subtype == SUBTYPE_PROBE_REQ:
@@ -186,22 +174,36 @@ class Client:
         self.mac = mac
         self.connected = False
         self.hostname = hostname
-        #self.p = mp.Process(target=self.listen)
         self.p = threading.Thread(target=self.listen)
 
     def connect(self):
-        self.ether.send(Frame.probe_req(self.mac, {}))
-        probe_resp = recv_packet(self.ether, self.mac, 0, SUBTYPE_PROBE_RESP, 10)
-        if probe_resp == None:
-            print("Client", self.mac, "No probe response")
+        got_probe = False
+        probe_resp = None
+        for _ in range(10):
+            self.ether.send(Frame.probe_req(self.mac, {}))
+            probe_resp = recv_packet(self.ether, self.mac, 0, SUBTYPE_PROBE_RESP, 1)
+            if probe_resp == None:
+                print("Client", self.mac, "No probe response")
+            else:
+                got_probe = True
+                break
+        if not got_probe:
             return False
         ap_mac = probe_resp.src
         ap_ssid = probe_resp.body["ssid"]
+
         print("Client", self.mac, "Connecting to", ap_ssid)
-        self.ether.send(Frame.auth(self.mac, ap_mac, {"seq": 1}))
-        auth_resp = recv_packet(self.ether, self.mac, 0, SUBTYPE_AUTH, 10)
-        if auth_resp == None:
-            print("Client", self.mac, "No auth response")
+        got_auth = False
+        auth_resp = None
+        for _ in range(10):
+            self.ether.send(Frame.auth(self.mac, ap_mac, {"seq": 1}))
+            auth_resp = recv_packet(self.ether, self.mac, 0, SUBTYPE_AUTH, 1)
+            if auth_resp == None:
+                print("Client", self.mac, "No auth response")
+            else:
+                got_auth = True
+                break
+        if not got_auth:
             return False
         if auth_resp.body["status"] != 0:
             print("Client", self.mac, "connect to", ap_ssid, "failed auth. Status:", auth_resp.body["status"])
@@ -209,10 +211,17 @@ class Client:
         
         #Protocol specific data gen
         self.deauth_body, assoc_body = self.protocol.client_assoc()
-        self.ether.send(Frame.assoc_req(self.mac, ap_mac, assoc_body))
-        assoc_resp = recv_packet(self.ether, self.mac, 0, SUBTYPE_ASSOC_RESP, 10)
-        if assoc_resp == None:
-            print("Client", self.mac, "No assoc response")
+        got_assoc = False
+        assoc_resp = None
+        for _ in range(10):
+            self.ether.send(Frame.assoc_req(self.mac, ap_mac, assoc_body))
+            assoc_resp = recv_packet(self.ether, self.mac, 0, SUBTYPE_ASSOC_RESP, 1)
+            if assoc_resp == None:
+                print("Client", self.mac, "No assoc response")
+            else:
+                got_assoc = True
+                break
+        if not got_assoc:
             return False
         self.ap_assoc = assoc_resp.body
         print("Client", self.mac, "Associated with ap", ap_ssid)
@@ -227,8 +236,7 @@ class Client:
         while self.connected:
             frame: Frame = self.ether.recv()
             if frame.dest == self.mac or frame.dest == ADDRESS_BROADCAST:
-                #Addressed to this AP
-                print("Client", self.mac, "recv", frame)
+                #Addressed to this Client
                 if frame.type == 0:
                     #Management
                     if frame.subtype == SUBTYPE_DEAUTH:
@@ -266,5 +274,4 @@ class Client:
     
     def _disconnected(self):
         self.connected = False
-        #self.p = mp.Process(target=self.listen)
         self.p = threading.Thread(target=self.listen)
