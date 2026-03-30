@@ -132,6 +132,8 @@ class AccessPoint:
                             if self.protocol.ap_verify_deauth(self.protocol_data, self.clients[frame.src]["assoc_data"], frame.body):
                                 self.clients.pop(frame.src)
                                 print("AP", self.mac, "Deauth by request", frame.src)
+                            else:
+                                print("AP", self.mac, "Bad deauth", frame.src)
                 elif frame.type == 2 and frame.subtype == 0:
                     if frame.src in self.clients:
                         if frame.body["protocol"] == "route":
@@ -243,6 +245,8 @@ class Client:
                         if self.protocol.client_verify_deauth(self.ap_assoc, frame.body):
                             self._disconnected()
                             print("Client", self.mac, "Deauth by request from", self.ap_ssid)
+                        else:
+                            print("Client", self.mac, "Bad deauth")
                 if frame.type == 2:
                     #Data
                     if frame.subtype == 0:
