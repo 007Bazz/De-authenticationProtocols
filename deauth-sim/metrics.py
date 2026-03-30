@@ -16,47 +16,54 @@ def make_graph():
     mems = [nm, lm, um]
     plt.bar(protocols, times)
     plt.savefig('connectTimings.png')
-    plt.bar(protocols, mems)
+    plt.clf()
+    plt.plot(nm, label="Normal")
+    plt.plot(lm, label="Letter Envelope")
+    plt.plot(um, label="UUID SHA512")
+    plt.legend()
     plt.savefig('connectMems.png')
 
 def normal_connect():
     ether = sim.Ether()
     protocol = Normal()
     ap = sim.AccessPoint(ether, "bo:ba:ca:fe:00:01", protocol, "AccessPoint")
+    mems = []
     start = time.time()
     for i in range(RUNS):
         h = "%04x" % i
         client = sim.Client(ether, "de:ad:be:ef:"+h[:2]+":"+h[-2:], protocol)
         client.connect()
+        mems.append(ap.client_memory())
     end = time.time()
-    size = ap.client_memory()
     ap.stop()
-    return (end-start, size)
+    return (end-start, mems)
 
 def letter_envelope_connect():
     ether = sim.Ether()
     protocol = LetterEnvelope()
     ap = sim.AccessPoint(ether, "bo:ba:ca:fe:00:01", protocol, "AccessPoint")
+    mems = []
     start = time.time()
     for i in range(RUNS):
         h = "%04x" % i
         client = sim.Client(ether, "de:ad:be:ef:"+h[:2]+":"+h[-2:], protocol)
         client.connect()
+        mems.append(ap.client_memory())
     end = time.time()
-    size = ap.client_memory()
     ap.stop()
-    return (end-start, size)
+    return (end-start, mems)
 
 def uuid_envelope_connect():
     ether = sim.Ether()
     protocol = UUIDSHA512()
     ap = sim.AccessPoint(ether, "bo:ba:ca:fe:00:01", protocol, "AccessPoint")
+    mems = []
     start = time.time()
     for i in range(RUNS):
         h = "%04x" % i
         client = sim.Client(ether, "de:ad:be:ef:"+h[:2]+":"+h[-2:], protocol)
         client.connect()
+        mems.append(ap.client_memory())
     end = time.time()
-    size = ap.client_memory()
     ap.stop()
-    return (end-start, size)
+    return (end-start, mems)

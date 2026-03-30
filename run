@@ -1,0 +1,1 @@
+PYTHONPATH=/home/awoo/.guix-profile/lib/python3.11/:/home/awoo/.guix-profile/lib/python3.11/site-packages/ python3 deauth-sim/run.py
