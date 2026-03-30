@@ -1,13 +1,14 @@
-import multiprocessing as mp
+#import multiprocessing as mp
+import threading
 import time
 
 class Ether:
     def __init__(self):
-        manager = mp.Manager()
-        self.shared = manager.dict()
-        self.write = manager.Lock()
-        self.read = manager.Event()
-        self.read_end = manager.Condition()
+        #manager = mp.Manager()
+        self.shared = {}
+        self.write = threading.Lock()
+        self.read = threading.Event()
+        self.read_end = threading.Condition()
         self.shared["readers"] = 0
     
     def send(self, message):
@@ -92,7 +93,8 @@ class AccessPoint:
         self.ssid = ssid
         self.clients = {}
         self.protocol_data = protocol.ap_start()
-        self.p = mp.Process(target=self.listen)
+        #self.p = mp.Process(target=self.listen)
+        self.p = threading.Thread(target=self.listen)
         self.p.start()
 
     def listen(self):
@@ -132,11 +134,16 @@ class AccessPoint:
                                 print("AP", self.mac, "Deauth by request", frame.src)
     
     def deauth_client(self, client_mac):
+        if not client_mac in self.clients:
+            print(self.clients)
         client = self.clients[client_mac]
         self.ether.send(Frame.deauth(self.mac, client_mac, self.protocol.ap_deauth_client(self.protocol_data, client["assoc_data"])))
     
     def deauth_all(self):
         self.ether.send(Frame.deauth(self.mac, ADDRESS_BROADCAST, self.protocol.ap_deauth_all(self.protocol_data)))
+    
+    def client_connected(self, client_mac):
+        return client_mac in self.clients
 
     def join(self):
         self.p.join()
@@ -147,7 +154,8 @@ class Client:
         self.protocol = protocol
         self.mac = mac
         self.connected = False
-        self.p = mp.Process(target=self.listen)
+        #self.p = mp.Process(target=self.listen)
+        self.p = threading.Thread(target=self.listen)
 
     def connect(self):
         self.ether.send(Frame.probe_req(self.mac, {}))
@@ -202,4 +210,5 @@ class Client:
     
     def _disconnected(self):
         self.connected = False
-        self.p = mp.Process(target=self.listen)
+        #self.p = mp.Process(target=self.listen)
+        self.p = threading.Thread(target=self.listen)
